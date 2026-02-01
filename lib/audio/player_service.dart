@@ -179,7 +179,18 @@ class PlayerService extends ChangeNotifier {
       notifyListeners();
 
       debugPrint('[Perf] Parsing URL: ${item.shareUrl}');
-      final r = await _api.parse(url: item.shareUrl, quality: quality ?? _quality);
+      
+      // 关键修复：如果没有显式指定音质，根据平台选择对应的偏好
+      String targetQuality;
+      if (quality != null) {
+        targetQuality = quality; // 用户主动切换音质时使用指定值
+      } else {
+        // 根据歌曲来源平台选择对应的音质偏好
+        // 注意：此时 item.platform 可能还未设置，所以先用默认值解析
+        targetQuality = _quality;
+      }
+      
+      final r = await _api.parse(url: item.shareUrl, quality: targetQuality);
       
       _current = SearchItem(
         platform: r.platform,
@@ -194,7 +205,10 @@ class PlayerService extends ChangeNotifier {
       
       _qualities = {for (final e in r.qualities.entries) e.key: e.value.url};
       _qualitiesLoading = false;
-      _quality = _getEffectiveQuality(r.platform, quality ?? _quality);
+      
+      // 关键修复：根据解析后的真实平台选择音质
+      final platformPref = (r.platform == 'qq') ? _prefQq : (r.platform == 'wyy' ? _prefWyy : targetQuality);
+      _quality = _getEffectiveQuality(r.platform, quality ?? platformPref);
       
       final picked = _qualities[_quality] ?? r.best.url;
       if (picked.isEmpty) throw Exception('No playable URL');
@@ -607,10 +621,18 @@ class PlayerService extends ChangeNotifier {
     }
   }
   Future<void> setQuality(String q) async {
-    _quality = q;
     if (_current == null) return;
     
-    debugPrint('[Quality] Switching to $q...');
+    // 关键修复：根据当前歌曲平台保存音质偏好
+    final platform = _current!.platform ?? 'wyy';
+    if (platform == 'qq') {
+      _prefQq = q;
+    } else if (platform == 'wyy') {
+      _prefWyy = q;
+    }
+    _quality = q; // 同时更新全局 _quality 用于当前播放
+    
+    debugPrint('[Quality] Switching to $q for platform $platform...');
     
     // 1. 保存当前状态
     final savedPosition = _player?.position ?? Duration.zero;
