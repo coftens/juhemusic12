@@ -86,7 +86,8 @@ class PlayerService extends ChangeNotifier {
   }
 
   void _onIndexChanged(int? index) {
-    if (_isSyncing || index == null || index < 0 || index >= _queue.length) return;
+    // 关键修复：在切换音质或手动切歌时，忽略所有来自系统的索引变化
+    if (_isSyncing || _isSwitching || index == null || index < 0 || index >= _queue.length) return;
     
     if (_index != index) {
       debugPrint('[Index] System triggered index change: $_index -> $index');
