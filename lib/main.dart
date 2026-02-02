@@ -17,8 +17,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiConfig.instance.load();
   await AuthSession.instance.load();
+  // v5.0: Disabled restoreState - app now starts with empty queue
   // Restore last playback snapshot (queue/index/position) and re-parse if needed.
-  unawaited(PlayerService.instance.restoreState());
+  // unawaited(PlayerService.instance.restoreState());
   runApp(const App());
 }
 

@@ -8,6 +8,7 @@ import '../audio/player_service.dart';
 import '../player/widgets/marquee_text.dart';
 import '../player/now_playing_page.dart';
 import '../ui/dominant_color.dart';
+import '../widgets/cached_cover_image.dart';
 
 class LibraryPlaylistPage extends StatefulWidget {
   const LibraryPlaylistPage({
@@ -44,7 +45,7 @@ class _LibraryPlaylistPageState extends State<LibraryPlaylistPage> {
     final url = _coverUrl;
     if (url.isEmpty) return;
     try {
-      final provider = ResizeImage(NetworkImage(url), width: 96);
+      final provider = ResizeImage(cachedImageProvider(url), width: 96);
       final c = await dominantColorFromImage(provider);
       if (!mounted) return;
       setState(() {
@@ -60,7 +61,7 @@ class _LibraryPlaylistPageState extends State<LibraryPlaylistPage> {
     if (url.isEmpty) {
       return MemoryImage(_transparentPng);
     }
-    return NetworkImage(url);
+    return cachedImageProvider(url);
   }
 
   @override
@@ -243,12 +244,9 @@ class _LibraryPlaylistPageState extends State<LibraryPlaylistPage> {
                     child: SizedBox(
                       width: 54,
                       height: 54,
-                      child: s.coverUrl.isEmpty
-                          ? Container(color: Colors.black12)
-                          : Image.network(
-                              s.coverUrl,
+                      child: CachedCoverImage(
+                              imageUrl: s.coverUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(color: Colors.black12),
                             ),
                     ),
                   ),

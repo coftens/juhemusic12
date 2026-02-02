@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/home/playlist_square_page.dart';
 
-
 import '../api/php_api_client.dart';
 import '../app/app_tabs.dart';
 import '../audio/player_service.dart';
 import '../player/now_playing_page.dart';
 import '../playlist/playlist_page.dart';
+import '../widgets/cached_cover_image.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -275,9 +275,14 @@ class _RecPageContent extends StatelessWidget {
                       coverUrl: s.coverUrl,
                     );
                     
+                    // v5.0: 使用限量队列初始化
                     final dedupedList = qishuiList.where((e) => e.shareUrl != s.shareUrl).toList();
                     final playList = [clickedItem, ...dedupedList];
-                    await PlayerService.instance.insertTopAndPlay(playList, 0);
+                    await PlayerService.instance.initQueueFromSource(
+                      source: QueueSource.qishuiRecommend,
+                      initialItems: playList,
+                    );
+                    await PlayerService.instance.playItem(clickedItem);
                     
                     if (!context.mounted) return;
                     Navigator.of(context).push(MaterialPageRoute(builder: (_) => NowPlayingPage(item: clickedItem)));
@@ -566,12 +571,9 @@ class _HeroCard extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(
-            child: coverUrl.isEmpty
-                ? Container(color: dark ? Colors.black87 : const Color(0xFFE7E7E7))
-                : Image.network(
-                    coverUrl,
+            child: CachedCoverImage(
+                    imageUrl: coverUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(color: dark ? Colors.black87 : const Color(0xFFE7E7E7)),
                   ),
           ),
           Positioned.fill(
@@ -654,12 +656,9 @@ class _SongRow extends StatelessWidget {
         child: SizedBox(
           width: 50,
           height: 50,
-          child: song.coverUrl.isEmpty
-              ? Container(color: Colors.black12)
-              : Image.network(
-                  song.coverUrl,
+          child: CachedCoverImage(
+                  imageUrl: song.coverUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.black12),
                 ),
         ),
       ),
@@ -691,12 +690,9 @@ class _PlaylistCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  p.coverUrl.isEmpty
-                      ? Container(color: Colors.black12)
-                      : Image.network(
-                          p.coverUrl,
+                  CachedCoverImage(
+                          imageUrl: p.coverUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(color: Colors.black12),
                         ),
                   Material(
                     color: Colors.transparent,
@@ -891,7 +887,7 @@ class _SqPlaylistItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: NetworkImage(item.coverUrl),
+                        image: cachedImageProvider(item.coverUrl),
                         fit: BoxFit.cover,
                       ),
                     ),

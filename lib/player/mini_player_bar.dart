@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../audio/player_service.dart';
+import '../widgets/cached_cover_image.dart';
 import 'now_playing_page.dart';
 
 class MiniPlayerBar extends StatelessWidget {
@@ -22,7 +23,7 @@ class MiniPlayerBar extends StatelessWidget {
         final posMs = svc.position.inMilliseconds;
         final v = durMs <= 0 ? 0.0 : (posMs / durMs).clamp(0.0, 1.0);
 
-        final ImageProvider cover = it.coverUrl.isEmpty ? MemoryImage(_transparentPng) : NetworkImage(it.coverUrl);
+        final ImageProvider cover = it.coverUrl.isEmpty ? MemoryImage(_transparentPng) : cachedImageProvider(it.coverUrl);
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

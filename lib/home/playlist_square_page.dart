@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/api/php_api_client.dart';
 import 'package:flutter_app/playlist/playlist_page.dart';
-
+import '../widgets/cached_cover_image.dart';
 
 class PlaylistSquarePage extends StatefulWidget {
   const PlaylistSquarePage({super.key});
@@ -169,7 +169,7 @@ class _PlaylistItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: NetworkImage(item.coverUrl),
+                        image: cachedImageProvider(item.coverUrl),
                         fit: BoxFit.cover,
                       ),
                     ),

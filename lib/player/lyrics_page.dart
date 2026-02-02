@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/php_api_client.dart';
 import '../audio/player_service.dart';
+import '../widgets/cached_cover_image.dart';
 
 class LyricsPage extends StatefulWidget {
   const LyricsPage({
@@ -64,7 +65,7 @@ class _LyricsPageState extends State<LyricsPage> {
 
     _shareUrl = cur.shareUrl;
     _item = cur;
-    _cover = cur.coverUrl.isEmpty ? _cover : NetworkImage(cur.coverUrl);
+    _cover = cur.coverUrl.isEmpty ? _cover : cachedImageProvider(cur.coverUrl);
     _activeIndex = 0;
     if (_scroll.hasClients) {
       _scroll.jumpTo(0);

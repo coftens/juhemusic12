@@ -9,6 +9,7 @@ import '../auth/auth_session.dart';
 import '../player/now_playing_page.dart';
 import '../storage/user_library.dart';
 import '../playlist/playlist_page.dart';
+import '../widgets/cached_cover_image.dart';
 import 'library_playlist_page.dart';
 
 
@@ -183,10 +184,9 @@ class _MePageState extends State<MePage> {
                     ),
                     child: ClipOval(
                       child: AuthSession.instance.user?.avatarUrl.isNotEmpty == true
-                          ? Image.network(
-                              AuthSession.instance.user!.avatarUrl,
+                          ? CachedCoverImage(
+                              imageUrl: AuthSession.instance.user!.avatarUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 42, color: Colors.black54),
                             )
                           : const Icon(Icons.person, size: 42, color: Colors.black54),
                     ),
@@ -456,12 +456,10 @@ class _LibraryCard extends StatelessWidget {
                 child: SizedBox(
                   width: 64,
                   height: 64,
-                  child: coverUrl.isEmpty
-                      ? Container(color: Colors.black12, child: const Icon(Icons.queue_music_rounded, color: Colors.black38))
-                      : Image.network(
-                          coverUrl,
+                  child: CachedCoverImage(
+                          imageUrl: coverUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(color: Colors.black12),
+                          placeholder: Container(color: Colors.black12, child: const Icon(Icons.queue_music_rounded, color: Colors.black38)),
                         ),
                 ),
               ),

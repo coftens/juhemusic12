@@ -36,11 +36,14 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   http: ^1.2.2
-  just_audio: ^0.9.39
+  just_audio:
+    path: packages/just_audio
   shared_preferences: ^2.3.2
   image_picker: ^1.1.2
   cryptography: ^2.9.0
-  just_audio_background: ^0.0.1-beta.17
+  just_audio_background:
+    path: packages/just_audio_background
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:

@@ -6,6 +6,7 @@ import '../player/widgets/marquee_text.dart';
 import '../player/now_playing_page.dart';
 import '../storage/user_library.dart';
 import '../ui/dominant_color.dart';
+import '../widgets/cached_cover_image.dart';
 
 class PlaylistPage extends StatefulWidget {
   const PlaylistPage({
@@ -74,7 +75,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
   Future<void> _ensureDominantHeader() async {
     if (widget.coverUrl.isEmpty) return;
     try {
-      final provider = ResizeImage(NetworkImage(widget.coverUrl), width: 96);
+      final provider = ResizeImage(cachedImageProvider(widget.coverUrl), width: 96);
       final c = await dominantColorFromImage(provider);
       if (!mounted) return;
       setState(() {
@@ -126,7 +127,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
     if (widget.coverUrl.isEmpty) {
       return const AssetImage('');
     }
-    return NetworkImage(widget.coverUrl);
+    return cachedImageProvider(widget.coverUrl);
   }
 
   @override
@@ -282,8 +283,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
                         ? null
                         : () {
                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => NowPlayingPage(item: _queue[0])));
-                            Future.microtask(() {
-                              _svc.replaceQueueAndPlay(_queue, startIndex: 0);
+                            Future.microtask(() async {
+                              final source = widget.id == 'daily_recommend' ? QueueSource.dailyRecommend : QueueSource.playlist;
+                              await _svc.initQueueFromSource(source: source, playlistId: widget.id, initialItems: _queue);
+                              if (_svc.queue.isNotEmpty) await _svc.playItem(_svc.queue[0]);
                             });
                           },
                     style: FilledButton.styleFrom(
@@ -330,12 +333,9 @@ class _PlaylistPageState extends State<PlaylistPage> {
                     child: SizedBox(
                       width: 54,
                       height: 54,
-                      child: s.coverUrl.isEmpty
-                          ? Container(color: Colors.black12)
-                          : Image.network(
-                              s.coverUrl,
+                      child: CachedCoverImage(
+                              imageUrl: s.coverUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(color: Colors.black12),
                             ),
                     ),
                   ),
@@ -346,8 +346,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
                   trailing: const Icon(Icons.play_arrow_rounded, color: Colors.black38),
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (_) => NowPlayingPage(item: item)));
-                    Future.microtask(() {
-                      _svc.replaceQueueAndPlay(_queue, startIndex: i);
+                    // v5.0: 使用新的歌单队列初始化方法
+                    Future.microtask(() async {
+                      final source = widget.id == 'daily_recommend' ? QueueSource.dailyRecommend : QueueSource.playlist;
+                      final playList = _queue.sublist(i);
+                      await _svc.initQueueFromSource(source: source, playlistId: widget.id, initialItems: playList);
+                      if (playList.isNotEmpty) await _svc.playItem(playList[0]);
                     });
                   },
                 );

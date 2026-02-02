@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../api/php_api_client.dart';
 import '../audio/player_service.dart';
+import '../widgets/cached_cover_image.dart';
 import 'vinyl_player_page.dart';
 
 class NowPlayingPage extends StatefulWidget {
@@ -57,7 +58,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
     if (url.isEmpty) {
       return MemoryImage(_transparentPng);
     }
-    return NetworkImage(url);
+    return cachedImageProvider(url);
   }
 
   Future<void> _togglePlay() async {

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../api/php_api_client.dart';
 import '../audio/player_service.dart';
+import '../widgets/cached_cover_image.dart';
 import 'widgets/marquee_text.dart';
 import 'widgets/stylus_arm.dart';
 import 'widgets/vinyl_disc.dart';
@@ -75,6 +76,7 @@ class _VinylPlayerPageState extends State<VinylPlayerPage>
   late final AnimationController _disc;
   late final AnimationController _stylus;
   late PageController _pageCtrl;
+  bool _isProgrammaticScroll = false;
 
   final _api = PhpApiClient();
   final _miniLyricScroll = ScrollController();
@@ -137,7 +139,9 @@ class _VinylPlayerPageState extends State<VinylPlayerPage>
     super.didUpdateWidget(oldWidget);
     if (widget.index != oldWidget.index) {
       if (_pageCtrl.hasClients && _pageCtrl.page?.round() != widget.index) {
+        _isProgrammaticScroll = true;
         _pageCtrl.jumpToPage(widget.index);
+        _isProgrammaticScroll = false;
       }
     }
     if (oldWidget.playing != widget.playing) {
@@ -329,6 +333,7 @@ class _VinylPlayerPageState extends State<VinylPlayerPage>
                                 child: PageView.builder(
                                   controller: _pageCtrl,
                                   onPageChanged: (i) {
+                                    if (_isProgrammaticScroll) return;
                                     PlayerService.instance.jumpTo(i);
                                   },
                                   itemCount: PlayerService.instance.queue.length,
@@ -339,7 +344,7 @@ class _VinylPlayerPageState extends State<VinylPlayerPage>
                                     if (isCurrent) {
                                       image = widget.cover;
                                     } else if (item.coverUrl.isNotEmpty) {
-                                      image = NetworkImage(item.coverUrl);
+                                      image = cachedImageProvider(item.coverUrl);
                                     } else {
                                       image = const AssetImage(''); // placeholder
                                     }
