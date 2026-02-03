@@ -1444,12 +1444,30 @@ int _findActiveIndex(List<_LyricLine> lines, int ms) {
   return ans;
 }
 
-class _OnePageScrollPhysics extends PageScrollPhysics {
+class _OnePageScrollPhysics extends ScrollPhysics {
   const _OnePageScrollPhysics({super.parent});
 
   @override
   _OnePageScrollPhysics applyTo(ScrollPhysics? ancestor) {
     return _OnePageScrollPhysics(parent: buildParent(ancestor));
+  }
+
+  double _getPage(ScrollMetrics position) {
+    return position.pixels / position.viewportDimension;
+  }
+
+  double _getPixels(ScrollMetrics position, double page) {
+    return page * position.viewportDimension;
+  }
+
+  double _getTargetPixels(ScrollMetrics position, Tolerance tolerance, double velocity) {
+    double page = _getPage(position);
+    if (velocity < -tolerance.velocity) {
+      page -= 0.5;
+    } else if (velocity > tolerance.velocity) {
+      page += 0.5;
+    }
+    return _getPixels(position, page.roundToDouble());
   }
 
   @override
@@ -1461,32 +1479,29 @@ class _OnePageScrollPhysics extends PageScrollPhysics {
     }
 
     final tolerance = this.tolerance;
-    final portion = position.pixels / position.viewportDimension;
+    final double target = _getTargetPixels(position, tolerance, velocity);
     
-    // Explicitly target the immediate next/prev page index
-    double target;
-    if (velocity.abs() < tolerance.velocity) {
-      // Low velocity: Snap to nearest
-      target = portion.roundToDouble();
-    } else {
-      // High velocity: Restrict to exactly one page flip relative to current pixel position
-      if (velocity > 0) {
-        // Swipe left (forward) -> Ceil (e.g. 1.1 -> 2.0)
-        target = portion.ceilToDouble();
-      } else {
-        // Swipe right (backward) -> Floor (e.g. 1.9 -> 1.0)
-        target = portion.floorToDouble();
-      }
-    }
-    
-    // Prevent target from being equal to current pixels (avoid stuck)
-    // and ensure we don't return null if velocity is high but we are exactly on page
-    
-    final targetPixels = target * position.viewportDimension;
-    
-    if (targetPixels != position.pixels) {
-      return ScrollSpringSimulation(spring, position.pixels, targetPixels, velocity, tolerance: tolerance);
+    // Check if target is different from current pixels
+    if (target != position.pixels) {
+       // CLAMP VELOCITY: reduce momentum to prevent feeling like it's "flying"
+       // This ensures the spring feels more controlled.
+       final double clampedVelocity = velocity.clamp(-8000.0, 8000.0);
+       
+      return ScrollSpringSimulation(
+        SpringDescription.withDampingRatio(
+          mass: 0.8, // Slightly lighter for responsiveness
+          stiffness: 100.0, // Stiff enough to snap
+          ratio: 1.1, // Over-damped to prevent bounce/overshoot
+        ),
+        position.pixels,
+        target,
+        clampedVelocity,
+        tolerance: tolerance,
+      );
     }
     return null;
   }
+
+  @override
+  bool get allowImplicitScrolling => false;
 }
