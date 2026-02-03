@@ -5,6 +5,7 @@ import '../auth/auth_session.dart';
 import '../auth/auth_page.dart';
 import 'app_shell.dart';
 import 'setup_page.dart';
+import 'permission_page.dart';
 
 class RootGate extends StatelessWidget {
   const RootGate({super.key});
@@ -14,6 +15,9 @@ class RootGate extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([ApiConfig.instance, AuthSession.instance]),
       builder: (context, _) {
+        if (!ApiConfig.instance.permissionsAccepted) {
+          return const PermissionPage();
+        }
         if (!ApiConfig.instance.isConfigured) {
           return const SetupPage();
         }

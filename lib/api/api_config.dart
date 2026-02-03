@@ -22,6 +22,18 @@ class ApiConfig extends ChangeNotifier {
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     _phpBaseUrl = (prefs.getString(_kPhpBaseUrlKey) ?? '').trim();
+    _permissionsAccepted = prefs.getBool(_kPermissionsAcceptedKey) ?? false;
+    notifyListeners();
+  }
+
+  static const _kPermissionsAcceptedKey = 'permissions_accepted';
+  bool _permissionsAccepted = false;
+  bool get permissionsAccepted => _permissionsAccepted;
+
+  Future<void> setPermissionsAccepted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kPermissionsAcceptedKey, true);
+    _permissionsAccepted = true;
     notifyListeners();
   }
 
